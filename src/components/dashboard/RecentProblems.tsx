@@ -4,23 +4,53 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getOpenProblems, categoryLabels, priorityLabels, problemStatusLabels, type Problem } from '@/data/mockData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useOpenProblems } from '@/hooks/useProblems';
 import { Link } from 'react-router-dom';
 
-const severityColors = {
+const severityLabels: Record<string, string> = {
+  low: 'Faible',
+  medium: 'Moyenne',
+  high: 'Élevée',
+};
+
+const severityColors: Record<string, string> = {
   low: 'bg-secondary text-secondary-foreground',
   medium: 'bg-status-warning-bg text-status-warning',
   high: 'bg-status-danger-bg text-status-danger',
 };
 
-const statusColors = {
+const statusLabels: Record<string, string> = {
+  open: 'Ouvert',
+  in_progress: 'En cours',
+  resolved: 'Résolu',
+};
+
+const statusColors: Record<string, string> = {
   open: 'bg-status-danger-bg text-status-danger',
   in_progress: 'bg-status-warning-bg text-status-warning',
   resolved: 'bg-status-success-bg text-status-success',
 };
 
 export function RecentProblems() {
-  const problems = getOpenProblems();
+  const { data: problems, isLoading } = useOpenProblems();
+
+  if (isLoading) {
+    return (
+      <Card className="h-full">
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-20 rounded-lg" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="h-full">
@@ -29,7 +59,7 @@ export function RecentProblems() {
           <AlertTriangle className="h-5 w-5 text-status-warning" />
           Problèmes ouverts
           <Badge variant="destructive" className="ml-2">
-            {problems.length}
+            {problems?.length || 0}
           </Badge>
         </CardTitle>
         <Link to="/problems">
@@ -42,7 +72,7 @@ export function RecentProblems() {
       <CardContent>
         <ScrollArea className="h-[300px]">
           <div className="space-y-3 pr-4">
-            {problems.length === 0 ? (
+            {!problems || problems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <AlertTriangle className="h-12 w-12 text-muted-foreground mb-2" />
                 <p className="text-muted-foreground">Aucun problème ouvert</p>
@@ -60,7 +90,7 @@ export function RecentProblems() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <h4 className="font-medium text-foreground">{problem.title}</h4>
-                        {problem.escalated && (
+                        {problem.is_escalated && (
                           <Badge variant="destructive" className="flex items-center gap-0.5 text-[10px]">
                             <ArrowUpRight className="h-3 w-3" />
                             Escaladé
@@ -71,14 +101,16 @@ export function RecentProblems() {
                     </div>
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <Badge variant="outline" className={severityColors[problem.severity]}>
-                      {priorityLabels[problem.severity]}
+                    <Badge variant="outline" className={severityColors[problem.severity || 'medium']}>
+                      {severityLabels[problem.severity || 'medium']}
                     </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {categoryLabels[problem.category]}
-                    </Badge>
-                    <Badge variant="outline" className={cn('text-xs', statusColors[problem.status])}>
-                      {problemStatusLabels[problem.status]}
+                    {problem.category && (
+                      <Badge variant="outline" className="text-xs">
+                        {problem.category.name}
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className={cn('text-xs', statusColors[problem.status || 'open'])}>
+                      {statusLabels[problem.status || 'open']}
                     </Badge>
                   </div>
                 </div>

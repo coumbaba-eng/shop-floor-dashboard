@@ -10,66 +10,86 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
-import { type KPICategory, categoryLabels, getKPIsByCategory } from '@/data/mockData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useCategoryStats } from '@/hooks/useDashboardStats';
 
-const categoryConfig: Record<KPICategory, { icon: React.ElementType; color: string; bgColor: string }> = {
-  security: { icon: Shield, color: 'text-sfm-security', bgColor: 'bg-sfm-security/10' },
-  quality: { icon: CheckCircle, color: 'text-sfm-quality', bgColor: 'bg-sfm-quality/10' },
-  delivery: { icon: Truck, color: 'text-sfm-delivery', bgColor: 'bg-sfm-delivery/10' },
-  cost: { icon: DollarSign, color: 'text-sfm-cost', bgColor: 'bg-sfm-cost/10' },
-  performance: { icon: TrendingUp, color: 'text-sfm-performance', bgColor: 'bg-sfm-performance/10' },
-  human: { icon: Users, color: 'text-sfm-human', bgColor: 'bg-sfm-human/10' },
-  environment: { icon: Leaf, color: 'text-sfm-environment', bgColor: 'bg-sfm-environment/10' },
-  workstation: { icon: Cog, color: 'text-sfm-workstation', bgColor: 'bg-sfm-workstation/10' },
+const iconMap: Record<string, React.ElementType> = {
+  S: Shield,
+  Q: CheckCircle,
+  L: Truck,
+  C: DollarSign,
+  P: TrendingUp,
+  H: Users,
+  E: Leaf,
+  W: Cog,
 };
 
 interface CategoryOverviewProps {
-  onCategoryClick?: (category: KPICategory) => void;
+  onCategoryClick?: (categoryCode: string) => void;
 }
 
 export function CategoryOverview({ onCategoryClick }: CategoryOverviewProps) {
-  const categories = Object.keys(categoryLabels) as KPICategory[];
+  const { data: categories, isLoading } = useCategoryStats();
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
+        {[...Array(8)].map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <Skeleton className="h-10 w-10 rounded-lg mb-3" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-5 w-16 mt-2" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
-      {categories.map((category, index) => {
-        const config = categoryConfig[category];
-        const Icon = config.icon;
-        const kpis = getKPIsByCategory(category);
-        const successCount = kpis.filter(k => k.status === 'success').length;
-        const warningCount = kpis.filter(k => k.status === 'warning').length;
-        const dangerCount = kpis.filter(k => k.status === 'danger').length;
+      {categories?.map((category, index) => {
+        const Icon = iconMap[category.code] || Cog;
 
         return (
           <Card
-            key={category}
+            key={category.id}
             className={cn(
-              'cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 animate-slide-up',
-              config.bgColor
+              'cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 animate-slide-up'
             )}
-            style={{ animationDelay: `${index * 50}ms` }}
-            onClick={() => onCategoryClick?.(category)}
+            style={{ 
+              animationDelay: `${index * 50}ms`,
+              backgroundColor: `${category.color}10`,
+            }}
+            onClick={() => onCategoryClick?.(category.code)}
           >
             <CardContent className="p-4">
-              <div className={cn('mb-3 flex h-10 w-10 items-center justify-center rounded-lg', config.bgColor)}>
-                <Icon className={cn('h-5 w-5', config.color)} />
+              <div 
+                className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg"
+                style={{ backgroundColor: `${category.color}20` }}
+              >
+                <Icon className="h-5 w-5" style={{ color: category.color }} />
               </div>
-              <h3 className="text-sm font-semibold text-foreground">{categoryLabels[category]}</h3>
+              <h3 className="text-sm font-semibold text-foreground">{category.name}</h3>
               <div className="mt-2 flex items-center gap-1">
-                {successCount > 0 && (
+                {category.success > 0 && (
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-status-success text-[10px] font-bold text-white">
-                    {successCount}
+                    {category.success}
                   </span>
                 )}
-                {warningCount > 0 && (
+                {category.warning > 0 && (
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-status-warning text-[10px] font-bold text-white">
-                    {warningCount}
+                    {category.warning}
                   </span>
                 )}
-                {dangerCount > 0 && (
+                {category.danger > 0 && (
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-status-danger text-[10px] font-bold text-white">
-                    {dangerCount}
+                    {category.danger}
                   </span>
+                )}
+                {category.total === 0 && (
+                  <span className="text-xs text-muted-foreground">Aucun KPI</span>
                 )}
               </div>
             </CardContent>

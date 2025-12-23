@@ -1,6 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCategoryStats, categoryLabels } from '@/data/mockData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useCategoryStats } from '@/hooks/useDashboardStats';
 
 const COLORS = {
   success: 'hsl(var(--status-success))',
@@ -9,13 +10,39 @@ const COLORS = {
 };
 
 export function CategoryPieChart() {
-  const stats = getCategoryStats();
+  const { data: stats, isLoading } = useCategoryStats();
   
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <Skeleton className="h-4 w-40" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[200px] w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   const data = [
-    { name: 'Conforme', value: stats.reduce((acc, s) => acc + s.success, 0), color: COLORS.success },
-    { name: 'Attention', value: stats.reduce((acc, s) => acc + s.warning, 0), color: COLORS.warning },
-    { name: 'Critique', value: stats.reduce((acc, s) => acc + s.danger, 0), color: COLORS.danger },
+    { name: 'Conforme', value: stats?.reduce((acc, s) => acc + s.success, 0) || 0, color: COLORS.success },
+    { name: 'Attention', value: stats?.reduce((acc, s) => acc + s.warning, 0) || 0, color: COLORS.warning },
+    { name: 'Critique', value: stats?.reduce((acc, s) => acc + s.danger, 0) || 0, color: COLORS.danger },
   ].filter(d => d.value > 0);
+
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Répartition des statuts KPI</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[200px]">
+          <p className="text-muted-foreground text-sm">Aucun KPI disponible</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
