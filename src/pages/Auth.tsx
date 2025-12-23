@@ -323,6 +323,60 @@ export default function AuthPage() {
             <p>Un administrateur peut modifier votre rôle</p>
           </div>
         </Card>
+
+        {/* Test Accounts Section */}
+        <Card className="w-full max-w-md mt-6 border-border/50 shadow-lg bg-muted/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Comptes de test
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Inscrivez-vous avec ces emails pour tester. Mot de passe : <code className="bg-muted px-1 py-0.5 rounded text-primary font-mono">Test123!</code>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-0">
+            <div className="grid gap-2 text-sm">
+              <div className="flex items-center justify-between p-2 rounded-lg bg-status-success/10 border border-status-success/20">
+                <div>
+                  <span className="font-medium text-foreground">admin@sfm.test</span>
+                  <p className="text-xs text-muted-foreground">Administrateur</p>
+                </div>
+                <span className="text-xs px-2 py-1 rounded-full bg-status-success/20 text-status-success font-medium">Admin</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-2 rounded-lg bg-primary/10 border border-primary/20">
+                <div>
+                  <span className="font-medium text-foreground">manager@sfm.test</span>
+                  <p className="text-xs text-muted-foreground">Responsable production</p>
+                </div>
+                <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary font-medium">Manager</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-2 rounded-lg bg-status-warning/10 border border-status-warning/20">
+                <div>
+                  <span className="font-medium text-foreground">leader@sfm.test</span>
+                  <p className="text-xs text-muted-foreground">Chef d'équipe</p>
+                </div>
+                <span className="text-xs px-2 py-1 rounded-full bg-status-warning/20 text-status-warning font-medium">Team Leader</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-2 rounded-lg bg-muted border border-border">
+                <div>
+                  <span className="font-medium text-foreground">operator@sfm.test</span>
+                  <p className="text-xs text-muted-foreground">Opérateur ligne</p>
+                </div>
+                <span className="text-xs px-2 py-1 rounded-full bg-muted-foreground/20 text-muted-foreground font-medium">Operator</span>
+              </div>
+            </div>
+            
+            <Alert className="bg-primary/5 border-primary/20">
+              <AlertDescription className="text-xs">
+                <strong>Instructions :</strong> Inscrivez-vous avec l'un de ces emails et le mot de passe <code className="bg-muted px-1 rounded">Test123!</code>. Les rôles seront attribués automatiquement.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
