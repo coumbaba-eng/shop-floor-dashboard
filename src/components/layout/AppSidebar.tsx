@@ -23,16 +23,24 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { useAuth, AppRole } from '@/contexts/AuthContext';
 import { categoryLabels, type KPICategory } from '@/data/mockData';
 
-const mainNavItems = [
+interface NavItem {
+  title: string;
+  icon: React.ElementType;
+  path: string;
+  allowedRoles?: AppRole[];
+}
+
+const mainNavItems: NavItem[] = [
   { title: 'Tableau de bord', icon: LayoutDashboard, path: '/' },
   { title: 'KPIs', icon: Gauge, path: '/kpis' },
   { title: 'Actions', icon: ListTodo, path: '/actions' },
   { title: 'Problèmes', icon: AlertTriangle, path: '/problems' },
-  { title: 'Postes / Machines', icon: Factory, path: '/workstations' },
+  { title: 'Postes / Machines', icon: Factory, path: '/workstations', allowedRoles: ['admin', 'manager', 'team_leader'] },
   { title: 'Tendances', icon: TrendingUp, path: '/trends' },
-  { title: 'Rapports', icon: FileText, path: '/reports' },
+  { title: 'Rapports', icon: FileText, path: '/reports', allowedRoles: ['admin', 'manager'] },
 ];
 
 const categoryIcons: Record<KPICategory, React.ElementType> = {
@@ -49,6 +57,13 @@ const categoryIcons: Record<KPICategory, React.ElementType> = {
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { role } = useAuth();
+
+  const filteredNavItems = mainNavItems.filter(item => {
+    if (!item.allowedRoles) return true;
+    if (!role) return false;
+    return item.allowedRoles.includes(role);
+  });
 
   return (
     <aside
@@ -68,7 +83,7 @@ export function AppSidebar() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
                 <Factory className="h-5 w-5 text-sidebar-primary-foreground" />
               </div>
-              <span className="text-lg font-semibold">SFM</span>
+              <span className="text-lg font-semibold">SFM Pro</span>
             </div>
           )}
           <Button
@@ -84,7 +99,7 @@ export function AppSidebar() {
         {/* Navigation */}
         <ScrollArea className="flex-1 px-3 py-4">
           <nav className="space-y-1">
-            {mainNavItems.map((item) => {
+            {filteredNavItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <NavLink
