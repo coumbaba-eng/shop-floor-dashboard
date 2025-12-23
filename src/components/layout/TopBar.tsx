@@ -1,4 +1,5 @@
-import { Bell, Search, User, ChevronDown } from 'lucide-react';
+import { Bell, Search, User, ChevronDown, LogOut, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -10,20 +11,37 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { currentUser, roleLabels, mockUsers, type UserRole } from '@/data/mockData';
-import { useState } from 'react';
+import { useAuth, AppRole } from '@/contexts/AuthContext';
 
 interface TopBarProps {
   title: string;
-  onRoleChange?: (role: UserRole) => void;
 }
 
-export function TopBar({ title, onRoleChange }: TopBarProps) {
-  const [selectedRole, setSelectedRole] = useState<UserRole>(currentUser.role);
+const roleLabels: Record<AppRole, string> = {
+  admin: 'Administrateur',
+  manager: 'Manager',
+  team_leader: 'Chef d\'équipe',
+  operator: 'Opérateur',
+};
 
-  const handleRoleChange = (role: UserRole) => {
-    setSelectedRole(role);
-    onRoleChange?.(role);
+const roleColors: Record<AppRole, string> = {
+  admin: 'bg-status-danger/20 text-status-danger',
+  manager: 'bg-primary/20 text-primary',
+  team_leader: 'bg-status-warning/20 text-status-warning',
+  operator: 'bg-status-success/20 text-status-success',
+};
+
+export function TopBar({ title }: TopBarProps) {
+  const navigate = useNavigate();
+  const { user, profile, role, signOut } = useAuth();
+
+  const displayName = profile?.first_name && profile?.last_name
+    ? `${profile.first_name} ${profile.last_name}`
+    : profile?.email || user?.email || 'Utilisateur';
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
   };
 
   return (
@@ -54,52 +72,47 @@ export function TopBar({ title, onRoleChange }: TopBarProps) {
           </span>
         </Button>
 
-        {/* Role Selector (Simulation) */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <span className="text-xs text-muted-foreground">Rôle:</span>
-              <Badge variant="secondary" className="font-normal">
-                {roleLabels[selectedRole]}
-              </Badge>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-popover">
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Simuler un rôle
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {(Object.keys(roleLabels) as UserRole[]).map((role) => (
-              <DropdownMenuItem
-                key={role}
-                onClick={() => handleRoleChange(role)}
-                className={selectedRole === role ? 'bg-accent' : ''}
-              >
-                {roleLabels[role]}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Role Badge */}
+        {role && (
+          <Badge className={`${roleColors[role]} border-0 font-normal`}>
+            {roleLabels[role]}
+          </Badge>
+        )}
 
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <User className="h-4 w-4" />
+                {profile?.first_name ? (
+                  <span className="text-sm font-medium">
+                    {profile.first_name[0]}{profile.last_name?.[0] || ''}
+                  </span>
+                ) : (
+                  <User className="h-4 w-4" />
+                )}
               </div>
-              <span className="hidden md:inline font-medium">{currentUser.name}</span>
+              <span className="hidden md:inline font-medium max-w-32 truncate">{displayName}</span>
               <ChevronDown className="h-3 w-3 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 bg-popover">
-            <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium">{displayName}</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
+              </div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profil</DropdownMenuItem>
-            <DropdownMenuItem>Préférences</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/settings')}>
+              <Settings className="mr-2 h-4 w-4" />
+              Paramètres
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Déconnexion</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              Déconnexion
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
