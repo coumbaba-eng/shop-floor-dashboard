@@ -1,32 +1,33 @@
 import { TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
-import { mockKPIs, mockActions, mockProblems } from '@/data/mockData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 export function SummaryStats() {
-  const kpiStats = {
-    total: mockKPIs.length,
-    success: mockKPIs.filter(k => k.status === 'success').length,
-    warning: mockKPIs.filter(k => k.status === 'warning').length,
-    danger: mockKPIs.filter(k => k.status === 'danger').length,
-  };
+  const { data: stats, isLoading } = useDashboardStats();
 
-  const actionStats = {
-    total: mockActions.length,
-    todo: mockActions.filter(a => a.status === 'todo').length,
-    inProgress: mockActions.filter(a => a.status === 'in_progress').length,
-    done: mockActions.filter(a => a.status === 'done').length,
-  };
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <Skeleton className="h-12 w-12 rounded-xl" />
+              <Skeleton className="mt-4 h-4 w-24" />
+              <Skeleton className="mt-2 h-8 w-16" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
-  const problemStats = {
-    total: mockProblems.length,
-    open: mockProblems.filter(p => p.status === 'open').length,
-    inProgress: mockProblems.filter(p => p.status === 'in_progress').length,
-    resolved: mockProblems.filter(p => p.status === 'resolved').length,
-    escalated: mockProblems.filter(p => p.escalated).length,
-  };
+  const kpiStats = stats?.kpis || { total: 0, success: 0, warning: 0, danger: 0 };
+  const actionStats = stats?.actions || { total: 0, todo: 0, inProgress: 0, done: 0 };
+  const problemStats = stats?.problems || { total: 0, open: 0, inProgress: 0, resolved: 0 };
 
-  const stats = [
+  const statItems = [
     {
       title: 'KPIs conformes',
       value: kpiStats.success,
@@ -77,7 +78,7 @@ export function SummaryStats() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat, index) => (
+      {statItems.map((stat, index) => (
         <Card key={stat.title} className="overflow-hidden animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
