@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, AlertTriangle, ArrowUpRight } from 'lucide-react';
+import { Plus, AlertTriangle, ArrowUpRight, Lock } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProblemCard } from '@/components/problems/ProblemCard';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,8 +40,15 @@ import {
   type Priority,
   type ProblemStatus,
 } from '@/data/mockData';
+import { usePermissions, roleLabels } from '@/hooks/usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProblemsPage() {
+  const { role } = useAuth();
+  const { canCreate, canEdit } = usePermissions();
+  const canCreateProblem = canCreate('problems');
+  const canEditProblem = canEdit('problems');
+  
   const [problems, setProblems] = useState<Problem[]>(mockProblems);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
